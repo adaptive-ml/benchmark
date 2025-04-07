@@ -27,6 +27,11 @@ spec:
                     secretKeyRef:
                       name: hf-token-secret
                       key: token
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: benchmarks-slack-wh
+                      key: wh
                 - name: ADAPTIVE_API_KEY
                   valueFrom:
                     secretKeyRef:
