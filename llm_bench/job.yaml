@@ -9,7 +9,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: benchmark-job
-          image: public.ecr.aws/o5q0o9k5/adaptive/llm-bench:multimodel
+          image: 245375281689.dkr.ecr.us-west-2.amazonaws.com/benchmark-dev-repo:multimodel
           imagePullPolicy: Always
           env:
             - name: VLLM_ENDPOINT
