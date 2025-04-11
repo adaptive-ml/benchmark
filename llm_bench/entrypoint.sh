@@ -32,7 +32,7 @@ echo "adaptive - 0% cache hit rate (randomized beginning tokens for each prompt)
 ./launch_all.sh -s $OUTPUT_DIR/nocache/$PREFIX-adaptive.csv -u $ADAPTIVE_ENDPOINT -p adaptive -m test -k $ADAPTIVE_API_KEY -r
 
 echo "testing multi model inference"
-python -s $OUTPUT_DIR/two_models --url $ADAPTIVE_ENDPOINT --randomize --api_key $ADAPTIVE_API_KEY
+python -s $OUTPUT_DIR/two_models.py --url $ADAPTIVE_ENDPOINT --randomize --api_key $ADAPTIVE_API_KEY
 
 #echo "vllm - 100% cache hit rate"
 #./launch_all.sh -s $OUTPUT_DIR/perfectcache/$PREFIX-vllm.csv -u $VLLM_ENDPOINT
