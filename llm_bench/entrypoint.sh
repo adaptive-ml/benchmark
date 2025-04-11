@@ -31,6 +31,9 @@ echo "adaptive - 100% cache hit rate"
 echo "adaptive - 0% cache hit rate (randomized beginning tokens for each prompt)"
 ./launch_all.sh -s $OUTPUT_DIR/nocache/$PREFIX-adaptive.csv -u $ADAPTIVE_ENDPOINT -p adaptive -m test -k $ADAPTIVE_API_KEY -r
 
+echo "testing multi model inference"
+python -s $OUTPUT_DIR/two_models --url $ADAPTIVE_ENDPOINT --randomize --api_key $ADAPTIVE_API_KEY
+
 #echo "vllm - 100% cache hit rate"
 #./launch_all.sh -s $OUTPUT_DIR/perfectcache/$PREFIX-vllm.csv -u $VLLM_ENDPOINT
 
@@ -44,6 +47,8 @@ echo "adaptive - 0% cache hit rate (randomized beginning tokens for each prompt)
 echo "Generate plots (current adaptive [$ADAPTIVE_VERSION] vs previous adaptive [$ADAPTIVE_REF_LATEST_VERSION] vs vllm)"
 python plotting.py --model Llama-3.1-8b --output-tokens 128 --input-files $OUTPUT_DIR/nocache/$PREFIX-adaptive.csv $OUTPUT_DIR/nocache/$ADAPTIVE_REF-adaptive.csv $OUTPUT_DIR/nocache/$VLLM_REF-vllm.csv --output-file $OUTPUT_DIR/reports/$PREFIX-adaptive-$ADAPTIVE_VERSION-vs-$ADAPTIVE_REF_LATEST_VERSION-nocache.html --extra-header "Adaptive $ADAPTIVE_VERSION vs. $ADAPTIVE_REF_LATEST_VERSION vs vllm (randomized prompts)" --provider-suffixes $ADAPTIVE_VERSION $ADAPTIVE_REF_LATEST_VERSION "0.7"
 python plotting.py --model Llama-3.1-8b --output-tokens 128 --input-files $OUTPUT_DIR/perfectcache/$PREFIX-adaptive.csv $OUTPUT_DIR/perfectcache/$ADAPTIVE_REF-adaptive.csv $OUTPUT_DIR/perfectcache/$VLLM_REF-vllm.csv --output-file $OUTPUT_DIR/reports/$PREFIX-adaptive-$ADAPTIVE_VERSION-vs-$ADAPTIVE_REF_LATEST_VERSION-perfectcache.html --extra-header "Adaptive $ADAPTIVE_VERSION vs. $ADAPTIVE_REF_LATEST_VERSION vs vllm (randomized prompts)" --provider-suffixes $ADAPTIVE_VERSION $ADAPTIVE_REF_LATEST_VERSION "0.7"
+echo "Generate plot for multi model inference"
+python plot_two_models.py $OUTPUT_DIR/benchmark_result.csv --output-file $OUTPUT_DIR/reports/$PREFIX-bench_multi_models-$ADAPTIVE_VERSION.html 
 
 echo "mark Reference version for next benchmark runs"
 echo $PREFIX > $OUTPUT_DIR/latest.txt
@@ -51,11 +56,13 @@ echo $ADAPTIVE_VERSION > $OUTPUT_DIR/adaptive-latest-version.txt
 
 PERFECT_CACHE_REPORT_URL=https://inference-benchmarks.tech-adaptive-ml.com/reports/$PREFIX-adaptive-$ADAPTIVE_VERSION-vs-$ADAPTIVE_REF_LATEST_VERSION-perfectcache.html
 NO_CACHE_REPORT_URL=https://inference-benchmarks.tech-adaptive-ml.com/reports/$PREFIX-adaptive-$ADAPTIVE_VERSION-vs-$ADAPTIVE_REF_LATEST_VERSION-nocache.html
+MULTI_MODEL_REPORT_URL=https://inference-benchmarks.tech-adaptive-ml.com/reports/$PREFIX-bench_multi_models-$ADAPTIVE_VERSION.html
 
 echo "publish slack message"
 curl -X POST -H 'Content-type: application/json' --data "{
   \"text\": \"*Latest Inference Benchmark Reports Available: Adaptive [$ADAPTIVE_VERSION] vs [$ADAPTIVE_REF_LATEST_VERSION]*\n
   🔗 <${PERFECT_CACHE_REPORT_URL}|Perfect Cache>\n
   🔗 <${NO_CACHE_REPORT_URL}|No Cache>\"
+  🔗 <${MULTI_MODEL_REPORT_URL}|Multi model report>\"
 }" "$SLACK_WEBHOOK_URL"
 

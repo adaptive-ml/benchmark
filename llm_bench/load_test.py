@@ -16,6 +16,7 @@ import orjson
 import threading
 from uuid import uuid4
 from sseclient import SSEClient
+import requests
 
 try:
     import locust_plugins
@@ -297,11 +298,9 @@ class OpenAIProvider(BaseProvider):
 
     def parse_output_json(self, data, prompt):
         usage = data.get("usage", None)
-
-        assert len(data["choices"]) == 1 or len(data["choices"]) == 0, f"Too many choices {len(data['choices'])}"
-
-        if len(data["choices"]) == 1:
-            choice = data["choices"][0]
+        if choices := data.get("choices"):
+            assert len(choices) == 1
+            choice = choices[0]
             if self.parsed_options.chat:
                 if self.parsed_options.stream:
                     text = choice["delta"].get("content", "")
@@ -338,7 +337,18 @@ class VllmProvider(OpenAIProvider):
         return data
 
 
+
 class AdaptiveProvider(OpenAIProvider):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session = requests.Session()
+        self._configure_session()
+
+    def _configure_session(self):
+        self.session.headers.update({
+            "Connection": "keep-alive",
+        })
 
     def get_url(self):
         if self.parsed_options.chat:
@@ -350,6 +360,16 @@ class AdaptiveProvider(OpenAIProvider):
         data = super().format_payload(prompt, max_tokens, images)
         data["stream_options"] = {"include_usage": True}
         return data
+
+    def send_request(self, url, data):
+        """Override the request method to use custom session settings."""
+        try:
+            response = self.session.post(url, json=data, timeout=60)  # Adjust timeout as needed
+            response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
 
 class TogetherProvider(OpenAIProvider):
