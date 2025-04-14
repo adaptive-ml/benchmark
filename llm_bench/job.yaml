@@ -3,6 +3,8 @@ kind: Job
 metadata:
   name: benchmark-job
 spec:
+  imagePullSecrets:
+    - name: adaptive-dev-ecr-registry-secret
   backoffLimit: 5
   template:
     spec:
