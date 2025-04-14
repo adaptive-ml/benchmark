@@ -16,11 +16,8 @@ spec:
           env:
             - name: VLLM_ENDPOINT
               value: http://vllm-svc-llama-7b
-
             - name: ADAPTIVE_ENDPOINT
               value: http://adaptive-control-plane-svc
-
-            # Huggingface token
             - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
