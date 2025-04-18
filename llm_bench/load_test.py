@@ -618,6 +618,8 @@ class LLMUser(HttpUser):
         self.client.headers["Content-Type"] = "application/json"
         if self.environment.parsed_options.api_key:
             self.client.headers["Authorization"] = "Bearer " + self.environment.parsed_options.api_key
+        if self.environment.parsed_options.cf_access_token:
+            self.client.headers["cf-access-token"] = self.environment.parsed_options.cf_access_token
         if self.environment.parsed_options.header:
             for header in self.environment.parsed_options.header:
                 key, val = header.split(":", 1)
@@ -754,6 +756,11 @@ class LLMUser(HttpUser):
                         continue
 
                     data = orjson.loads(chunk.data)
+
+                    # NOTE Axel: not sure why I'm only running into this now 
+                    if len(data.keys()) == 1 and "finish_reason" in data:
+                        continue
+
                     out = self.provider_formatter.parse_output_json(data, prompt)
                     if out.usage_tokens:
                         total_usage_tokens = (total_usage_tokens or 0) + out.usage_tokens
@@ -928,6 +935,11 @@ def init_parser(parser):
         "--api-key",
         env_var="API_KEY",
         help="Auth for the API",
+    )
+    parser.add_argument(
+        "--cf-access-token",
+        help="Cloudflare token for the API",
+        default=None,
     )
     parser.add_argument(
         "--temperature",

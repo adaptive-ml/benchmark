@@ -53,7 +53,12 @@ def main():
             ]
             if args.randomize:
                 cmd.append('--prompt-randomize')
+                
+            if "CF_TOKEN" in os.environ:
+                print("Adding CF_TOKEN to command")
+                cmd.extend(['--cf-access-token', os.environ["CF_TOKEN"]])
 
+            print(f"Running command: {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
             time.sleep(5)
 
