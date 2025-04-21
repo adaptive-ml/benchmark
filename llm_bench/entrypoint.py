@@ -6,25 +6,21 @@ from typing import Literal
 import requests
 import json
 
-
-OUTPUT_DIR = "./llm-benchmarks"
-
 # --- Script Setup ---
-
+OUTPUT_DIR = os.environ["OUTPUT_DIR"]
 GPU_NAME = os.environ.get("GPU_NAME", "")
-
 BENCHMARKS_PAGE = "https://inference-benchmarks.tech-adaptive-ml.com/reports"
-HARMONY_ENDPOINT = "http://adaptive-harmony-0.adaptive-harmony-hdls-svc.default.svc.cluster.local:50053"
 
 # Get Adaptive version from Harmony
 try:
-    resp = requests.get(f"{HARMONY_ENDPOINT}/version_info", timeout=5)
+    resp = requests.get(f"{os.environ['HARMONY_ENDPOINT']}/version_info", timeout=5)
     resp.raise_for_status()
     ADAPTIVE_VERSION = resp.json().get("image_tag", "")
 except Exception:
     ADAPTIVE_VERSION = ""
 
 CURRENT_TIMESTAMP = datetime.datetime.now().strftime("%Y-%m-%d-%H%M")
+
 VLLM_REF_TIMESTAMP = "2025-03-05-1720"
 with open(f"{OUTPUT_DIR}/latest.txt") as f:
     ADAPTIVE_REF_TIMESTAMP = f.read().strip()
@@ -65,7 +61,7 @@ def run_benchmark(provider, endpoint, api_key=None, hit_cache=True, is_lora=Fals
         model_path = (
             "test"
             if not is_lora
-            else "lora_benchmarking_test/adapt-llama-3-1-8b-finance-rag-2025-04-07-17-54"
+            else "lora_test/llama_3.1_sql_adapter"
         )
         args += ["-m", model_path]
         if api_key:
@@ -122,7 +118,7 @@ print("ADAPTIVE_VERSION =", ADAPTIVE_VERSION)
 print("ADAPTIVE_REF =", ADAPTIVE_REF_TIMESTAMP)
 print("ADAPTIVE_REF_LATEST_VERSION =", ADAPTIVE_REF_LATEST_VERSION)
 
-for is_lora in [True, False]:
+for is_lora in [False, True]:
     for hit_cache in [True, False]:
         run_benchmark(
             provider="adaptive",

@@ -18,6 +18,12 @@ spec:
             - name: ADAPTIVE_ENDPOINT
               value: http://adaptive-control-plane-svc
 
+            - name: HARMONY_ENDPOINT
+              value: http://adaptive-harmony-0.adaptive-harmony-hdls-svc.default.svc.cluster.local:50053
+            
+            - name: OUTPUT_DIR
+              value: /llm-benchmarks
+
             # Huggingface token
             - name: HF_TOKEN
               valueFrom:

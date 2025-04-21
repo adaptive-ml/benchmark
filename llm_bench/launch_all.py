@@ -21,8 +21,11 @@ def main():
     args = parse_args()
 
     # Read environment variables or use defaults
-    lengths_str = os.environ.get('LENGTHS', '128,256,512,1024,2048,4096')
-    qps_str = os.environ.get('QPS', '0.125,0.5,1,2,4,6,8,10,12,14,16,18,20')
+    # lengths_str = os.environ.get('LENGTHS', '128,256,512,1024,2048,4096')
+    # qps_str = os.environ.get('QPS', '0.125,0.5,1,2,4,6,8,10,12,14,16,18,20')
+
+    lengths_str = os.environ.get('LENGTHS', '256,1024')
+    qps_str = os.environ.get('QPS', '0.125,0.5,1,2')
 
     lengths = lengths_str.split(',')
     qps = qps_str.split(',')

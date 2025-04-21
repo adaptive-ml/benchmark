@@ -625,7 +625,7 @@ class LLMUser(HttpUser):
                 key, val = header.split(":", 1)
                 self.client.headers[key] = val
         self._guess_provider()
-        print(f" Provider {self.provider} using model {self.model} ".center(80, "*"))
+        # print(f" Provider {self.provider} using model {self.model} ".center(80, "*"))
         self.provider_formatter = PROVIDER_CLASS_MAP[self.provider](self.model, self.environment.parsed_options)
 
         self.stream = self.environment.parsed_options.stream
