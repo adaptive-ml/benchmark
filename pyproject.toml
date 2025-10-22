@@ -1,0 +1,12 @@
+[project]
+name = "benchmark"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "adaptive-sdk>=0.1.6",
+    "loguru>=0.7.3",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+]

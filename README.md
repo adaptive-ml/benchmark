@@ -1,34 +1,14 @@
-# Benchmark / Load-testing Suite by Fireworks.ai
+# ML Benchmark tool
 
-## LLM benchmarking
+This tool is invoked from github action in https://github.com/adaptive-ml/adaptive
 
-The load test is designed to simulate continuous production load and minimize effect of model generation behavior:
-* variation in generation parameters
-* continuous request stream with varying distribution and load levels
-* force generation of exact number of output tokens (for most providers)
-* specified load test duration
+## Process
 
-Supported providers and API flavors:
-* OpenAI API compatible endpoints:
-  * [Fireworks.ai](https://app.fireworks.ai) public or private deployments
-  * VLLM
-  * Anyscale Endpoints
-  * OpenAI
-* Text Generation Inference (TGI) / HuggingFace Endpoints
-* Together.ai
-* NVidia Triton server:
-  * Legacy HTTP endpoints (no streaming)
-  * LLM-focused endpoints (with or without streaming)
+* Create a k8s job (supervisor)
 
-Captured metrics:
-* Overall latency
-* Number of generated tokens
-* Sustained requests throughput (QPS)
-* Time to first token (TTFT) for streaming
-* Per token latency for streaming
-
-Metrics summary can be exported to CSV. This way multiple configuration can be scripted over. CSV file can be imported to Google Sheets/Excel or Jupyter for further analysis.
-
-See [`llm_bench`](llm_bench) folder for detailed usage.
-
-See [`benchmark_suite.ipynb`](benchmark_suite.ipynb) for a detailed example of how to use the load test script and run different types of benchmark suites.
+Inside the job:
+1. Create an argo App (adaptive-ml-bench)
+1. Wait 4 app to be ready
+1. Launch Benchmark scenarios
+1. Collect result and send slack message
+1. Delete argo App

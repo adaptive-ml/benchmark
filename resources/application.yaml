@@ -1,0 +1,150 @@
+# This is the argocd App deployed to create a bench environment on FS
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adaptive-ml-benchmark
+spec:
+  destination:
+    namespace: adaptive-ml-benchmark
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/adaptive-ml/adaptive-helm-chart
+    path: charts/adaptive
+    targetRevision: HEAD
+    helm:
+      valuesObject:
+        installPostgres:
+          enabled: true
+          image:
+            repository: 245375281689.dkr.ecr.us-west-2.amazonaws.com/adaptive/dbseed
+            tag: placeholder # Tag will be injected at runtime
+          password: securepassword
+        ingress:
+          enabled: true
+          className: tailscale
+          hosts:
+            - host: adaptive-ml-benchmark
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+              - adaptive-ml-benchmark
+        prometheus:
+          enabled: false
+        secrets:
+          auth:
+            oidc:
+              providers:
+                - name: "email (AWS Cognito)"
+                  key: "cognito"
+                  issuer_url: "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_NgiHOAmP6"
+                  client_id: "fake"
+                  client_secret: "fake"
+                  scopes:
+                    - "openid"
+                    - "email"
+                    - "profile"
+                  pkce: true
+                  allow_sign_up: true
+                  allowed_domains: []
+          cookiesSecret: change-me-secret-db40431e-c2fd-48a6-acd6-854232c2ed94-01dd4d01-dr7b-4315
+          # use python urllib.parse.quote to escape password
+          # dbUrl: postgresql://postgres:8oc62GHpNI14VOLD5e3WZUkuzhKwBNg7@my-postgres.adaptive-ml-benchmark.svc:5432/postgres
+          modelRegistryUrl: /model_registry
+          sharedDirectoryUrl: /workdir
+        serviceAccount:
+          annotations: {}
+          automount: true
+          create: true
+          name: serviceaccount.adaptive-ml.com
+        containerRegistry: 245375281689.dkr.ecr.us-west-2.amazonaws.com
+        controlPlane:
+          sharedDirType: local
+          replicaCount: 1
+          extraEnvVars:
+            ADAPTIVE_APP__ENABLE_GQL_SCHEMA_INTROSPECTION: "true"
+            ADAPTIVE_LOGGING_LEVEL: "warn"
+            ADAPTIVE_BILLING__CURRENT: '{start="2025-09-01",end="2026-08-31",quota=10000000}'
+          image:
+            pullPolicy: Always
+            repository: adaptive/concorde
+            tag: placeholder # Tag will be injected at runtime
+          rootUrl: https://benchmark-ml.tech-adaptive-ml.com
+          runDbMigrations: true
+          servicePort: 80
+          tolerations: null
+        demodb:
+          activate: true
+        harmony:
+          extraEnvVars:
+            USE_REPLAY_BUFFER: "true"
+            HARMONY_SETTING_LOGGING_LEVEL: "INFO"
+            NCCL_DEBUG: "INFO"
+            NCCL_SOCKET_IFNAME: "eth0"
+            NCCL_IB_HCA: "mlx5"
+            UCX_NET_DEVICES: "mlx5_0:1,mlx5_1:1,mlx5_2:1,mlx5_5:1,mlx5_6:1,mlx5_7:1,mlx5_8:1,mlx5_9:1"
+            ADAPTIVE_EXCLUSIVE_PARTITION_SIZE: 24
+            HARMONY_SETTINGS_NCCL_WATCHDOG_TIMEOUT_SECONDS: 120
+            HARMONY_SETTING_WORKING_DIR: /workdir
+          gpusPerReplica: 8
+          group: default
+          securityContext:
+            capabilities:
+              add: ["SYS_PTRACE"]
+          image:
+            pullPolicy: Always
+            repository: adaptive/harmony
+            tag: placeholder # Tag will be injected at runtime
+          partitionKey: default-statefulset
+          replicaCount: 1
+          computePool: []
+          resources:
+            limits:
+              cpu: 150
+              memory: 1900Gi
+              nvidia.com/hostdev: 8
+            requests:
+              cpu: 120
+              memory: 1500Gi
+              nvidia.com/hostdev: 8
+        mlflow:
+          enabled: false
+        redis:
+          resources:
+            limits:
+              cpu: 8
+              memory: 4Gi
+            requests:
+              cpu: 4
+              memory: 4Gi
+        imagePullSecrets:
+          - name: adaptive-dev-ecr-registry-secret
+        volumes:
+          - name: model-registry
+            hostPath:
+              path: /lustrefs/workshops/2025-6-25/model-registry # TODO
+              type: Directory
+          - name: working-directory
+            hostPath:
+              path: /mnt/fluidstack/nfs/benchmarks/adaptive-ml-benchmark/workdir # TODO
+              type: Directory
+        volumeMounts:
+          - name: model-registry
+            mountPath: /model_registry
+          - name: working-directory
+            mountPath: /workdir
+        ## set api admins
+        auth:
+          default_role: admin
+          default_team: default
+          admins: ["alessandro@adaptive-ml.com", "axel@adaptive-ml.com", "baptiste@adaptive-ml.com", "daniel@adaptive-ml.com", "jean-baptiste@adaptive-ml.com", "joao@daptive-ml.com", "julien@adaptive-ml.com", "keir@adaptive-ml.com", "olivier.roche@adaptive-ml.com", "olivier@adaptive-ml.com", "theo@adaptive-ml.com", "vincent@adaptive-ml.com", "yacine@adaptive-ml.com"]
+          session:
+            expiration_seconds: 518400
+            secure: true
+
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
